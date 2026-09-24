@@ -1,0 +1,4 @@
+# OpenTofu / Terraform
+infraestrutura/.terraform/
+infraestrutura/terraform.tfstate
+infraestrutura/terraform.tfstate.*

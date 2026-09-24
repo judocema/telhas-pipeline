@@ -42,8 +42,10 @@ FORNECEDORES = ['Teixeira Fernandes S/A', 'da Cruz', 'Cassiano',
                  'Carvalho Sousa S/A', 'Alves e Filhos', 'Alves S/A',
                  'Novais S.A.', 'Câmara', 'Ferreira', 'Nascimento', 'Pastor']
 
-PASTA_SAIDA = '/home/aluno/telhas/dados_entrada'  # troque pelo caminho real
-
+PASTA_SAIDA = os.environ.get(
+    'PASTA_SAIDA',
+    os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dados'))
+)
 _contador_id = 0
 
 
