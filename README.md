@@ -4,8 +4,6 @@
 
 ## Descrição
 
-Este repositório é a entrega do **Checkpoint 01 – DevOps e Infraestrutura Privada**.
-
 O problema do projeto é a falta de controle da queima de lenha em cada forno de uma fábrica de telhas de barro. Para começar a resolver isso, o repositório tem:
 
 - um **simulador de dados** (`simulador/`) que gera registros de queima dos fornos e de compra de lenha em arquivos CSV;
