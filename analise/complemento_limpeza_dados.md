@@ -9,9 +9,9 @@ Este arquivo complementa o repositório e explica o que foi feito nesta etapa do
 
 ## 1. Objetivo da etapa
 
-No Checkpoint 01 criamos a infraestrutura e o simulador, que gera arquivos CSV com os dados da queima de lenha nos fornos. Nesta etapa pegamos esses CSVs, verificamos a qualidade dos dados, corrigimos o que fosse preciso e organizamos tudo para a análise.
+Criamos uma infraestrutura e um simulador que gera arquivos CSV com os dados da queima de lenha nos fornos. Utilizamos esses arquivos para verificar a qualidade dos dados, identificar possíveis inconsistências e organizar as informações para a análise.
 
-O problema que escolhemos resolver é a **falta de controle sobre a queima de lenha em cada forno**. Por isso, depois da limpeza, calculamos o consumo de lenha por forno, por tipo de lenha, por tipo de forno e por responsável.
+O problema que escolhemos resolver é a **falta de controle sobre a queima de lenha em cada forno**. Por isso, após a limpeza dos dados, calculamos o consumo de lenha por forno, tipo de lenha, tipo de forno e responsável pela queima.
 
 ## 2. Dados de entrada
 
