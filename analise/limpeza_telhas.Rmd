@@ -1,0 +1,248 @@
+---
+title: "Tratamento dos dados da queima de lenha"
+output: html_document
+date: "2026-10-07"
+---
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+getwd()
+list.files()
+
+arquivos = list.files(
+  "brutos",
+  pattern = "^telhas_queimas_.*\\.csv$",
+  full.names = TRUE
+)
+
+length(arquivos)
+
+lista = lapply(arquivos, function(arq) {
+  d = read.csv(
+    arq,
+    na.strings = c("", "NA"),
+    fileEncoding = "UTF-8"
+  )
+  d$arquivo_origem = basename(arq)
+  d
+})
+
+dados = do.call(rbind, lista)
+```
+
+
+```{r}
+# Conferir o tipo atual das datas
+class(dados$data_inicio_queima)
+
+# Converter as datas para data e hora
+dados$data_inicio_queima = as.POSIXct(
+  dados$data_inicio_queima,
+  format = "%Y-%m-%d %H:%M",
+  tz = "America/Sao_Paulo"
+)
+
+dados$data_fim_queima = as.POSIXct(
+  dados$data_fim_queima,
+  format = "%Y-%m-%d %H:%M",
+  tz = "America/Sao_Paulo"
+)
+
+# Remover espaços extras das colunas de texto
+dados$id_queima = trimws(dados$id_queima)
+dados$id_forno = trimws(dados$id_forno)
+dados$id_lote = trimws(dados$id_lote)
+dados$tipo_forno = trimws(dados$tipo_forno)
+dados$tipo_lenha_utilizada = trimws(dados$tipo_lenha_utilizada)
+dados$responsavel_queima = trimws(dados$responsavel_queima)
+
+# Conferir os tipos e os valores ausentes após a conversão
+class(dados$data_inicio_queima)
+str(dados)
+colSums(is.na(dados))
+```
+
+```{r}
+tipos_forno_validos = c(
+  "Forno Intermitente",
+  "Forno Túnel",
+  "Forno Caieira"
+)
+
+tipos_lenha_validos = c(
+  "Aroeira",
+  "Pinus",
+  "Angico",
+  "Resíduo de Madeira",
+  "Eucalipto"
+)
+
+temp_min = 600
+temp_max = 1100
+horas_max = 120
+```
+
+
+```{r}
+# Quantidade de lenha inválida
+dados |> filter(quantidade_lenha_utilizada_kg <= 0)
+
+# Duração inválida
+dados |> filter(
+  tempo_total_queima_horas <= 0 |
+  tempo_total_queima_horas > horas_max
+)
+
+# Temperatura fora dos limites
+dados |> filter(
+  temperatura_forno_c < temp_min |
+  temperatura_forno_c > temp_max
+)
+
+# Quantidade de telhas no forno inválida
+dados |> filter(quantidade_telhas_no_forno <= 0)
+
+# Quantidade produzida inválida
+dados |> filter(quantidade_telhas_produzidas <= 0)
+
+# Quantidade de defeitos negativa
+dados |> filter(quantidade_telhas_com_defeito < 0)
+
+# Tipo de forno desconhecido
+dados |> filter(!tipo_forno %in% tipos_forno_validos)
+
+# Tipo de lenha desconhecido
+dados |> filter(!tipo_lenha_utilizada %in% tipos_lenha_validos)
+
+# Identificador do forno fora do padrão
+dados |> filter(!grepl("^F[0-9]{3}$", id_forno))
+```
+
+
+
+
+```{r}
+# Verificar se o fim da queima é anterior ao início
+dados |> filter(data_fim_queima < data_inicio_queima)
+
+# Comparar a duração registrada com a duração calculada
+dados |>
+  mutate(
+    duracao_calculada = as.numeric(
+      difftime(data_fim_queima, data_inicio_queima, units = "hours")
+    ),
+    diferenca_horas = abs(
+      duracao_calculada - tempo_total_queima_horas
+    )
+  ) |>
+  filter(diferenca_horas > 0.2)
+
+# Verificar se foram produzidas mais telhas do que cabiam no forno
+dados |>
+  filter(quantidade_telhas_produzidas > quantidade_telhas_no_forno)
+
+# Verificar se os defeitos superam a produção
+dados |>
+  filter(quantidade_telhas_com_defeito > quantidade_telhas_produzidas)
+
+# Verificar se um mesmo forno aparece com mais de um tipo
+dados |>
+  group_by(id_forno) |>
+  summarise(tipos = n_distinct(tipo_forno), .groups = "drop") |>
+  filter(tipos > 1)
+```
+
+
+
+```{r}
+dados = dados |>
+  arrange(id_forno, data_inicio_queima) |>
+  group_by(id_forno) |>
+  mutate(fim_queima_anterior = lag(data_fim_queima)) |>
+  ungroup() |>
+  mutate(
+    queima_sobreposta = coalesce(
+      data_inicio_queima < fim_queima_anterior,
+      FALSE
+    )
+  )
+
+table(dados$queima_sobreposta)
+
+dados |>
+  filter(queima_sobreposta) |>
+  select(
+    id_queima,
+    id_forno,
+    data_inicio_queima,
+    fim_queima_anterior
+  )
+
+n_distinct(dados$data_inicio_queima)
+
+table(as.Date(dados$data_inicio_queima))
+```
+```{r}
+# Verificar IDs de queima repetidos
+sum(duplicated(dados$id_queima))
+
+# Verificar IDs de lote repetidos
+sum(duplicated(dados$id_lote))
+
+# Verificar registros duplicados, ignorando o nome do arquivo de origem
+sum(duplicated(dados |> select(-arquivo_origem)))
+
+# Verificar horários repetidos no mesmo forno
+dados |>
+  group_by(id_forno, data_inicio_queima) |>
+  summarise(quantidade =n(), .groups = "drop") |>
+  filter(quantidade > 1)
+```
+
+```{r}
+dados = dados |>
+  mutate(
+    lenha_ok = quantidade_lenha_utilizada_kg > 0,
+    duracao_ok = tempo_total_queima_horas > 0 &
+      tempo_total_queima_horas <= horas_max,
+    temperatura_ok = temperatura_forno_c >= temp_min &
+      temperatura_forno_c <= temp_max,
+    telhas_forno_ok = quantidade_telhas_no_forno > 0,
+    producao_ok = quantidade_telhas_produzidas > 0,
+    defeitos_ok = quantidade_telhas_com_defeito >= 0,
+    tipo_forno_ok = tipo_forno %in% tipos_forno_validos,
+    tipo_lenha_ok = tipo_lenha_utilizada %in% tipos_lenha_validos,
+    id_forno_ok = grepl("^F[0-9]{3}$", id_forno),
+    datas_ok = !is.na(data_inicio_queima) &
+      !is.na(data_fim_queima) &
+      data_fim_queima >= data_inicio_queima
+  )
+
+dados = dados |>
+  mutate(
+    across(ends_with("_ok"), ~ coalesce(.x, FALSE)),
+    registro_ok = if_all(ends_with("_ok"), ~ .x)
+  )
+
+# Criar indicadores de produção
+dados = dados |>
+  mutate(
+    telhas_boas = quantidade_telhas_produzidas -
+      quantidade_telhas_com_defeito,
+    taxa_defeito_pct = 100 * quantidade_telhas_com_defeito /
+      quantidade_telhas_produzidas,
+    lenha_kg_por_hora = quantidade_lenha_utilizada_kg /
+      tempo_total_queima_horas,
+    lenha_kg_por_mil_telhas = quantidade_lenha_utilizada_kg /
+      quantidade_telhas_produzidas * 1000,
+    data_queima = as.Date(data_inicio_queima),
+    mes_queima = format(data_inicio_queima, "%Y-%m")
+  )
+
+# Conferir os registros válidos
+table(dados$registro_ok)
+```
+
