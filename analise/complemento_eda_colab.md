@@ -127,7 +127,7 @@ Escolhemos o gráfico conforme o **tipo da variável**, como pedem as orientaç�
 | Visualizações adequadas ao tipo de variável | Seção 4 |
 | Interpretação de cada gráfico | Texto abaixo de cada gráfico |
 | Tabelas-resumo ligadas ao problema | Seção 5 |
-| Insights, limitações e próximos passos | Seção 11 (versão final, depois das etapas de Big Data) |
+| Insights, limitações e próximos passos | Seção 12 (versão final, depois das etapas de Big Data e da estatística) |
 
 ## 10. Próximos passos
 

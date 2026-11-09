@@ -3,9 +3,9 @@
 **Projeto Integrado – Data Science** | Fábrica de telhas de barro
 **Tema:** Automação e Escalabilidade de Pipelines de Big Data e Análise de Dados
 **Equipe:** Julia Docema de Carvalho e Julia Fernandes de Ovidio
-**Etapa:** Arquitetura de dados, Data Mining, Machine Learning e processamento distribuído (Google Colab)
+**Etapa:** Arquitetura de dados, Data Mining, Machine Learning, processamento distribuído e Probabilidade e Estatística (Google Colab)
 
-Este arquivo complementa o repositório. Depois da EDA, o professor pediu que o projeto mostrasse todo o fluxo de Big Data, e não só a parte estatística. Aqui explicamos o que foi adicionado ao notebook `EDA_telhas_queimas.ipynb` (seções 6 a 11) e por quê.
+Este arquivo complementa o repositório. Depois da EDA, o professor pediu que o projeto mostrasse todo o fluxo de Big Data, e não só a parte estatística. Aqui explicamos o que foi adicionado ao notebook `EDA_telhas_queimas.ipynb` (seções 6 a 12) e por quê.
 
 ## 1. Problema e ligação com cada etapa
 
@@ -134,21 +134,42 @@ O resultado do Spark foi conferido contra o pandas e bateu.
 
 **Como escalaria:** com mais dados, os arquivos iriam para o HDFS ou armazenamento em nuvem, o Spark rodaria em um cluster gerenciado pelo YARN e o código dos DataFrames e do Spark SQL continuaria o mesmo, mudando só a configuração da sessão.
 
-## 9. Limitações
+## 9. Probabilidade e Estatística
+
+A unidade de Probabilidade e Estatística pede medidas descritivas, distribuições de frequência, proporções, probabilidades e relações entre variáveis, para apoiar as interpretações. Isso está na seção 11 do notebook.
+
+| Conteúdo | O que foi feito | Resultado principal |
+| --- | --- | --- |
+| Posição | Média, mediana, moda, mínimo, máximo e quartis | Lenha por mil telhas: média 155,2 e mediana 157,5 kg |
+| Dispersão | Amplitude, variância, desvio-padrão, IQR, coeficiente de variação e assimetria | A lenha total varia muito (CV de 45%); a lenha por mil telhas varia menos (CV de 23,7%) |
+| Frequência | Faixas de 20 kg, com frequência absoluta, relativa e acumulada | Distribuição quase plana; 13,5% das queimas ficam entre 200 e 220 kg |
+| Proporções | Participação de cada tipo de forno e de lenha | Intermitente 41,7%, Túnel 33,3% e Caieira 25% |
+| Probabilidades | Probabilidades empíricas e condicionais | P(alerta) = 13,5%; P(alerta \| Túnel) = 15,9% |
+| Regra de Bayes | P(Túnel \| alerta) | 39,3%, contra 33,3% de Túnel na base |
+| Independência | Qui-quadrado entre alerta e tipo de forno ou de lenha | p = 0,446 e 0,354: sem evidência de relação |
+| Distribuição normal | Shapiro-Wilk e comparação com a curva normal | Não é normal; a normal subestima o alerta (11,2% contra 13,5%) |
+| Intervalo de confiança | Média com 95% de confiança | 152,3 a 158,1 kg por mil telhas |
+| Comparação de grupos | ANOVA e Kruskal-Wallis | p acima de 0,05 para lenha (0,20) e forno (0,955) |
+| Relações | Correlação de Pearson e de Spearman, com p-valor | Telhas x lenha: 0,83; tempo e temperatura x lenha: 0,00 |
+| Anomalias | Escore z, regra do boxplot e z dentro da mesma carga | Nenhuma anomalia; o risco está na variação grande |
+
+**Conclusão para a empresa:** o problema não está em queimas absurdas, e sim na variação do consumo. Uma em cada sete queimas passa de 200 kg por mil telhas, e nem o tipo de forno nem o de lenha explicam isso com significância estatística.
+
+## 10. Limitações
 
 - **Dados simulados:** o pipeline funciona, mas os valores não representam a fábrica real. Tempo e temperatura não influenciam a lenha, o que não aconteceria em queimas reais.
 - **Sobreposição de queimas:** 600 das 624 queimas se sobrepõem no mesmo forno. A dimensão de tempo do DW tem só 2 dias.
 - **Volume pequeno:** o Hadoop foi simulado e o Spark rodou em modo local. O ganho de desempenho não aparece com este volume.
 - **Modelo de ML:** usa uma única divisão treino/teste, sem validação cruzada.
 
-## 10. Próximos passos
+## 11. Próximos passos
 
 - Ajustar o simulador para gerar queimas em sequência no tempo e em maior volume.
 - Treinar o modelo com dados reais da fábrica e testar outros algoritmos.
 - Automatizar o pipeline para rodar a cada novo arquivo (tema do projeto: automação e escalabilidade).
 - Testar o Spark em cluster e o Hive sobre o HDFS.
 
-## 11. Arquivos desta etapa
+## 12. Arquivos desta etapa
 
 | Arquivo no repositório | O que é |
 | --- | --- |
