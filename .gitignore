@@ -1,0 +1,24 @@
+# OpenTofu: estado e cache locais
+infraestrutura/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+
+# Chaves e senhas
+*.pem
+*.key
+id_ed25519
+id_rsa
+
+# Python e Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Ansible
+*.retry
+
+# CSVs brutos gerados pelo simulador (ficam na VM)
+dados/telhas_queimas_2*.csv
+dados/telhas_compras_*.csv
