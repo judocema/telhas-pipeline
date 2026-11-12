@@ -1,0 +1,149 @@
+---
+# Parte 1: na VM do gerador, instala o node_exporter.
+# Ele mostra os numeros de CPU, memoria, disco e rede na porta 9100.
+- name: Instalar o node_exporter na VM do gerador
+  hosts: simulador
+  become: true
+
+  tasks:
+    - name: Esperar o cloud-init terminar
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+      failed_when: false
+
+    - name: Instalar o node_exporter
+      ansible.builtin.apt:
+        name: prometheus-node-exporter
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Deixar o node_exporter ligado (e ligar sozinho no boot)
+      ansible.builtin.service:
+        name: prometheus-node-exporter
+        state: started
+        enabled: true
+
+
+# Parte 2: na VM de monitoramento, instala o Prometheus e o Grafana.
+- name: Instalar Prometheus e Grafana na VM de monitoramento
+  hosts: monitor
+  become: true
+
+  vars:
+    ip_simulador: "{{ hostvars['telhas-vm']['ansible_host'] }}"
+
+  tasks:
+    - name: Esperar o cloud-init terminar
+      ansible.builtin.command: cloud-init status --wait
+      changed_when: false
+      failed_when: false
+
+    - name: Instalar o Prometheus e o node_exporter (para monitorar a propria VM tambem)
+      ansible.builtin.apt:
+        name:
+          - prometheus
+          - prometheus-node-exporter
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Configurar o Prometheus para coletar a VM do gerador
+      ansible.builtin.copy:
+        dest: /etc/prometheus/prometheus.yml
+        owner: root
+        group: root
+        mode: "0644"
+        validate: promtool check config %s
+        content: |
+          global:
+            scrape_interval: 15s
+
+          scrape_configs:
+            - job_name: "prometheus"
+              static_configs:
+                - targets: ["localhost:9090"]
+
+            - job_name: "simulador"
+              static_configs:
+                - targets: ["{{ ip_simulador }}:9100"]
+                  labels:
+                    vm: "telhas-vm"
+
+            - job_name: "monitor"
+              static_configs:
+                - targets: ["localhost:9100"]
+                  labels:
+                    vm: "telhas-monitor"
+      notify: Reiniciar o Prometheus
+
+    - name: Deixar o Prometheus ligado
+      ansible.builtin.service:
+        name: prometheus
+        state: started
+        enabled: true
+
+    - name: Instalar pacotes para adicionar o repositorio do Grafana
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - software-properties-common
+          - wget
+        state: present
+
+    - name: Criar a pasta das chaves do apt
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Baixar a chave do repositorio do Grafana
+      ansible.builtin.get_url:
+        url: https://apt.grafana.com/gpg.key
+        dest: /etc/apt/keyrings/grafana.asc
+        mode: "0644"
+
+    - name: Adicionar o repositorio do Grafana
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+        filename: grafana
+        state: present
+
+    - name: Instalar o Grafana
+      ansible.builtin.apt:
+        name: grafana
+        state: present
+        update_cache: true
+
+    - name: Ligar o Grafana ao Prometheus (fonte de dados)
+      ansible.builtin.copy:
+        dest: /etc/grafana/provisioning/datasources/prometheus.yml
+        owner: root
+        group: grafana
+        mode: "0640"
+        content: |
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://localhost:9090
+              isDefault: true
+      notify: Reiniciar o Grafana
+
+    - name: Deixar o Grafana ligado (e ligar sozinho no boot)
+      ansible.builtin.service:
+        name: grafana-server
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reiniciar o Prometheus
+      ansible.builtin.service:
+        name: prometheus
+        state: restarted
+
+    - name: Reiniciar o Grafana
+      ansible.builtin.service:
+        name: grafana-server
+        state: restarted
