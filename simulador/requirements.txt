@@ -1,3 +1,0 @@
-# O simulador usa só bibliotecas que já vêm com o Python 3 (csv, random, datetime, os).
-# Não precisa instalar nada extra.
-
