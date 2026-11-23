@@ -21,7 +21,7 @@ Pegar os CSVs gerados pelo simulador, verificar a qualidade dos dados e organiza
 
 ## 3. O que foi feito
 
-Usamos o RStudio com o pacote `dplyr`, no estilo das aulas, seguindo as dimensões de qualidade:
+Usamos o RStudio com o pacote `dplyr`, seguindo as dimensões de qualidade:
 
 1. **Importação:** os 52 CSVs foram juntados numa tabela só, guardando o nome do arquivo de origem de cada linha.
 2. **Conhecendo os dados:** `head`, `dim`, `names`, `str`, `summary` e tabelas de frequência.
