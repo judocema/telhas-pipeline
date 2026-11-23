@@ -5,11 +5,6 @@ title: "Limpeza dos dados da queima de lenha - Fábrica de Telhas"
 Projeto Integrado - Data Science
 Fábrica de telhas de barro: controle da queima de lenha nos fornos
 
-Antes de começar:
-- Salve este arquivo (.Rmd) na pasta ~/telhas-dados, junto com a pasta "brutos"
-- No RStudio: Session > Set Working Directory > To Source File Location
-- Rode os blocos em ordem, um de cada vez (Ctrl+Shift+Enter)
-- A pasta "brutos" nunca é alterada. O resultado limpo vai para a pasta "limpos"
 
 1. Pacotes
 ```{r}
