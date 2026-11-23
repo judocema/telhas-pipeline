@@ -6,7 +6,7 @@
 
 ## 1. Problema
 
-Numa fábrica de telhas de barro, a lenha é o principal insumo da queima, mas não existe controle de quanto cada forno gasta em cada queima. O objetivo do projeto é montar um pipeline de dados que gere, organize e analise esses registros, para responder: **quanto de lenha uma queima deveria gastar e quais queimas gastaram demais?**
+Numa fábrica de telhas de barro, a lenha é o principal insumo da queima, mas não existe controle de quanto cada forno gasta em cada queima. O objetivo do projeto é montar um pipeline de dados que gere, organize e analise esses registros, para analisar quanto de lenha uma queima deveria gastar e quais queimas gastaram demais.
 
 ## 2. Visão geral do pipeline
 
